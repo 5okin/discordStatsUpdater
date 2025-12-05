@@ -1,0 +1,9 @@
+{
+  "name": "topgg-updater",
+  "type": "module",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "mongodb": "^6.0.0",
+    "node-fetch": "^3.0.0"
+  }
+}

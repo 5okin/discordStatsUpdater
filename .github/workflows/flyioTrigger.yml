@@ -1,0 +1,28 @@
+name: TriggerFlyUpdater
+
+on:
+  schedule:
+    # Runs daily at midnight UTC; change as needed
+    - cron: "0 0 * * *" #
+  workflow_dispatch: 
+
+jobs:
+  start-fly-machine:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Fly CLI
+        run: |
+          curl -L https://fly.io/install.sh | sh
+          export PATH="$HOME/.fly/bin:$PATH"
+          fly version
+
+      - name: Start Fly Machine
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          FLY_APP_NAME: ${{ secrets.FLY_APP_NAME }}
+          FLY_MACHINE_ID: ${{ secrets.FLY_MACHINE_ID }}
+        run: |
+          export PATH="$HOME/.fly/bin:$PATH"
+          flyctl auth token $FLY_API_TOKEN
+          flyctl machine start $FLY_MACHINE_ID --app $FLY_APP_NAME
