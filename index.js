@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import { MongoClient } from "mongodb";
 import "dotenv/config";
 
@@ -6,40 +5,61 @@ const {
   MONGODB_URI,
   MONGODB_DB,
   TOPGG_TOKEN,
+  DISCORDFORGE_TOKEN,
   BOT_ID
 } = process.env;
 
-(async () => {
+async function postStats(name, url, token, payload) {
+  console.log(`Updating ${name}...`);
+  
   try {
-    console.log("Connecting to MongoDB...");
-    const client = new MongoClient(MONGODB_URI);
-    await client.connect();
-    const db = client.db("servers");
-    const count = await db.collection(MONGODB_DB).countDocuments();
-
-    console.log(`Server count: ${count}`);
-    console.log("Sending to top.gg...");
-
-    const response = await fetch(`https://top.gg/api/bots/${BOT_ID}/stats`, {
+    const response = await fetch(url, {
       method: "POST",
       headers: {
-        "Authorization": TOPGG_TOKEN,
-        "Content-Type": "application/json"
+        Authorization: token,
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ server_count: count })
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(15_000)
     });
 
     if (!response.ok) {
-      console.error("Top.gg Error:", await response.text());
-      process.exit(1);
+      throw new Error(`${name}: ${await response.text()}`);
     }
+    console.log(`${name} updated`);
+  }
+  catch(err){
+    console.error(`${name} failed to update:`, err.message);
+  }
+}
 
-    console.log("Successfully updated top.gg!");
-    await client.close();
-    process.exit(0);
+(async () => {
+  const client = new MongoClient(MONGODB_URI);
+  try {
+    console.log("Connecting to MongoDB...");
+    await client.connect();
+    const db = client.db("servers");
+    const serverCount = await db.collection(MONGODB_DB).countDocuments();
+    const userCount = (await db.collection("discord").aggregate([
+                {
+                  $group: {
+                    _id: null,
+                    totalPopulation: { $sum: "$population" }
+                  }
+                }
+              ]).toArray())[0].totalPopulation;
 
+    console.log(`Server count: ${serverCount}\nUser count: ${userCount}`);
+
+    await Promise.all([
+      postStats("DiscordForge", 'https://discordforge.org/api/v1/bots/stats', `Bearer ${DISCORDFORGE_TOKEN}`, { server_count: serverCount, user_count: userCount }),
+      postStats("top.gg", `https://top.gg/api/bots/${BOT_ID}/stats`, TOPGG_TOKEN, { server_count: serverCount }),
+    ])
+  
   } catch (err) {
     console.error(err);
     process.exit(1);
+  } finally {
+    await client.close();
   }
 })();

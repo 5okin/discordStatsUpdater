@@ -1,5 +1,5 @@
 {
-  "name": "topgg-updater",
+  "name": "discordStatsUpdater",
   "type": "module",
   "dependencies": {
     "dotenv": "^17.2.3",

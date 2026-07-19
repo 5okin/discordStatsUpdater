@@ -1,6 +1,6 @@
 # Top.gg Server Count Updater
 
-A small Node.js script that updates your bot's server count on [top.gg](https://top.gg) once per day  using a **Fly.io machine**. The machine is started via **GitHub Actions**, runs the update script, and then stops automatically to minimize costs. 
+A small Node.js script that updates your bot's server count on [top.gg](https://top.gg) and [discordforge](https://discordforge.org/) once per day  using a **Fly.io machine**. The machine is started via **GitHub Actions**, runs the update script, and then stops automatically to minimize costs. 
 
 ---
 
@@ -64,4 +64,5 @@ You have to setup  the following environment variables:
 | ----------------- | --------------------------------- |
 | `MONGODB_URI`     | Connection string to your MongoDB |
 | `TOPGG_API_TOKEN` | API token for your bot on top.gg  |
+| `DISCORDFORGE_TOKEN` | API token for your bot on discordForge  |
 | `MONGODB_DB` | mongo collection with your servers|
